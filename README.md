@@ -1,6 +1,8 @@
 # 2N Intercom for Home Assistant
 
-A Home Assistant custom integration for **2N IP intercoms and access units** — switch/relay control, IO input monitoring, directory management, real-time log events, and Keymaster synchronisation. Zero external dependencies.
+A Home Assistant custom integration for **2N IP intercoms and access units** — switch/relay control, IO input monitoring, camera snapshot, directory management, real-time log events, and Keymaster synchronisation. Zero external dependencies.
+
+![2N Intercom Lovelace Card](images/card-screenshot.png)
 
 ---
 
