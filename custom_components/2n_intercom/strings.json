@@ -1,0 +1,38 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to your 2N Device",
+        "description": "Enter connection details for your 2N IP intercom or access unit.\n\nEnable HTTP API on the device: **Services → HTTP API**.",
+        "data": {
+          "host":        "Device IP address or hostname",
+          "username":    "API username",
+          "password":    "API password",
+          "use_ssl":     "Use HTTPS",
+          "verify_ssl":  "Verify SSL certificate",
+          "auth_method": "Authentication method",
+          "port":        "Custom port (leave blank for default)",
+          "device_name": "Friendly device name (optional)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect. Check the IP address and that the device is reachable.",
+      "invalid_auth":   "Invalid username or password.",
+      "unknown":        "An unexpected error occurred. Check the HA logs."
+    },
+    "abort": {
+      "already_configured": "This 2N device is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "2N Intercom Options",
+        "data": {
+          "scan_interval": "Directory & status poll interval (seconds)"
+        }
+      }
+    }
+  }
+}
