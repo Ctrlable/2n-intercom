@@ -1,7 +1,7 @@
 {
   "domain": "2n_intercom",
   "name": "2N Intercom",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "documentation": "https://github.com/Ctrlable/2n-intercom",
   "issue_tracker": "https://github.com/Ctrlable/2n-intercom/issues",
   "requirements": [],

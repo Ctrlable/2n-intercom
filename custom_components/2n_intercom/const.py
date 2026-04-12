@@ -20,7 +20,7 @@ DEFAULT_SCAN_INTERVAL = 30
 DEFAULT_AUTH_METHOD = "basic"
 
 # ── Platforms ──────────────────────────────────────────────────────────────
-PLATFORMS = ["sensor", "switch", "binary_sensor"]
+PLATFORMS = ["sensor", "switch", "binary_sensor", "camera"]
 
 # ── Data store keys ────────────────────────────────────────────────────────
 DATA_COORDINATOR = "coordinator"

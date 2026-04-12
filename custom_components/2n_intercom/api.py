@@ -463,6 +463,62 @@ class TwoNApi:
             {"access": {"validFrom": str(valid_from), "validTo": str(valid_to)}},
         )
 
+    # ── Camera ────────────────────────────────────────────────────────────
+
+    async def get_camera_caps(self) -> dict:
+        """Return camera capabilities: available sources and JPEG resolutions."""
+        try:
+            result = await self._http.get("/api/camera/caps")
+            return result or {}
+        except TwoNApiError as exc:
+            if exc.code == ERR_NOT_SUPPORTED:
+                raise TwoNUnsupportedError("Camera not supported on this device")
+            raise
+
+    async def get_camera_snapshot(
+        self,
+        width: int = 640,
+        height: int = 480,
+        source: str | None = None,
+        time_offset: int | None = None,
+    ) -> bytes:
+        """Fetch a JPEG snapshot from the device camera. Returns raw JPEG bytes."""
+        import asyncio as _asyncio
+
+        params: dict = {"width": str(width), "height": str(height)}
+        if source:
+            params["source"] = source
+        if time_offset is not None:
+            params["time"] = str(time_offset)
+
+        ep  = "api/camera/snapshot"
+        url = f"{self._http._conn.base_url}/{ep}"
+        kwargs: dict = {"auth": self._http._auth, "params": params}
+        if self._http._conn.use_ssl:
+            kwargs["ssl"] = self._http._conn.verify_ssl
+
+        try:
+            async with _asyncio.timeout(15):
+                async with self._http._session.get(url, **kwargs) as resp:
+                    if resp.status == 401:
+                        raise TwoNAuthError("Camera: invalid credentials")
+                    if resp.status == 403:
+                        raise TwoNAuthError("Camera: insufficient privileges")
+                    ct = resp.content_type or ""
+                    if "json" in ct:
+                        data = await resp.json(content_type=None)
+                        code = data.get("error", {}).get("code", -1)
+                        raise TwoNApiError(code, "camera/snapshot error")
+                    if "image" not in ct and "multipart" not in ct:
+                        raise TwoNUnsupportedError(
+                            f"Unexpected camera response content-type: {ct}"
+                        )
+                    return await resp.read()
+        except aiohttp.ClientConnectorError as exc:
+            raise TwoNConnectionError(f"Camera connection failed: {exc}") from exc
+        except _asyncio.TimeoutError as exc:
+            raise TwoNConnectionError("Camera snapshot timed out") from exc
+
     # ── Connection test ───────────────────────────────────────────────────
 
     async def test_connection(self) -> dict[str, Any]:
