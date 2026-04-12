@@ -3,8 +3,9 @@
  * A Lovelace custom card for managing 2N IP intercom directory users,
  * viewing the camera feed, and controlling door switches.
  *
- * Install: copy to /config/www/2n-intercom-card.js
- * Add to resources: /local/2n-intercom-card.js (type: module)
+ * Install: via HACS (Frontend / Dashboard category) — installs automatically
+ * Manual install: copy dist/2n-intercom.js to /config/www/community/2n-intercom/
+ * Resource URL (auto-added by HACS): /hacsfiles/2n-intercom/2n-intercom.js
  *
  * Card config:
  *   type: custom:2n-intercom-card
