@@ -105,8 +105,12 @@ class TwoNCoordinator(DataUpdateCoordinator[TwoNCoordinatorData]):
             # IO ports
             data.ports = await self.api.get_ports()
 
-            # Log caps (static, only needed once but harmless to re-fetch)
-            data.log_caps = await self.api.get_log_caps()
+            # Log caps — optional feature, not all devices/firmware support it
+            try:
+                data.log_caps = await self.api.get_log_caps()
+            except TwoNError as exc:
+                _LOGGER.debug("Log API not available on this device: %s", exc)
+                data.log_caps = []
 
             # Directory
             users = await self.api.list_users()
@@ -153,6 +157,9 @@ class TwoNCoordinator(DataUpdateCoordinator[TwoNCoordinatorData]):
 
     async def start_log_loop(self) -> None:
         """Start background task that long-polls device log events."""
+        if not self.data or not self.data.log_caps:
+            _LOGGER.debug("[%s] log API not supported, skipping log loop", self.entry_id)
+            return
         if self._log_task and not self._log_task.done():
             return
         self._log_task = self.hass.async_create_background_task(
@@ -191,6 +198,9 @@ class TwoNCoordinator(DataUpdateCoordinator[TwoNCoordinatorData]):
                     include="new",
                     duration=SUB_DURATION,
                 )
+                if channel_id == -1:
+                    _LOGGER.debug("[%s] log subscribe returned no channel, stopping loop", self.entry_id)
+                    return
                 _LOGGER.debug(
                     "[%s] log subscribed, channel=%s", self.entry_id, channel_id
                 )

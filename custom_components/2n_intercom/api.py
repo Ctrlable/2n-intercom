@@ -47,11 +47,15 @@ class TwoNUnsupportedError(TwoNError):
 # ── Error code constants (mirrors py2n ApiError enum) ────────────────────
 
 ERR_NOT_SUPPORTED       = 1
+ERR_FEATURE_DISABLED    = 8   # feature not licensed / disabled on this device
 ERR_AUTHORIZATION       = 9
 ERR_INSUFFICIENT_PRIV   = 10
 ERR_MISSING_PARAM       = 11
 ERR_INVALID_VALUE       = 12
 ERR_PROCESSING          = 14
+
+# Codes that mean "this endpoint/feature is not available on this device"
+_UNSUPPORTED_CODES = (ERR_NOT_SUPPORTED, ERR_FEATURE_DISABLED)
 
 
 # ── Connection data ───────────────────────────────────────────────────────
@@ -294,12 +298,12 @@ class TwoNApi:
     # ── Log / real-time events ────────────────────────────────────────────
 
     async def get_log_caps(self) -> list[str]:
-        """Return list of supported log event types."""
+        """Return list of supported log event types, or [] if not available."""
         try:
             result = await self._http.get("/api/log/caps")
             return (result or {}).get("events", [])
         except TwoNApiError as exc:
-            if exc.code == ERR_NOT_SUPPORTED:
+            if exc.code in _UNSUPPORTED_CODES:
                 return []
             raise
 
@@ -309,14 +313,19 @@ class TwoNApi:
         filter_events: list[str] | None = None,
         duration: int = 90,
     ) -> int:
-        """Subscribe to log stream; returns channel id."""
+        """Subscribe to log stream; returns channel id, or -1 if not supported."""
         filter_str = ""
         if filter_events:
             filter_str = f"&filter={','.join(filter_events)}"
-        result = await self._http.get(
-            f"/api/log/subscribe?include={include}&duration={duration}{filter_str}"
-        )
-        return (result or {}).get("id", -1)
+        try:
+            result = await self._http.get(
+                f"/api/log/subscribe?include={include}&duration={duration}{filter_str}"
+            )
+            return (result or {}).get("id", -1)
+        except TwoNApiError as exc:
+            if exc.code in _UNSUPPORTED_CODES:
+                return -1
+            raise
 
     async def log_unsubscribe(self, channel_id: int) -> None:
         """Unsubscribe from log stream."""
