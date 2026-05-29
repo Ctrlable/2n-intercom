@@ -55,14 +55,14 @@ _OPT_ENTRY = vol.Optional(ATTR_ENTRY_ID)
 CREATE_USER_SCHEMA = vol.Schema({
     _OPT_ENTRY: str,
     vol.Required(ATTR_USER_NAME): cv.string,
-    vol.Optional(ATTR_USER_EMAIL,        default=""): cv.string,
-    vol.Optional(ATTR_USER_VIRT_NUMBER,  default=""): cv.string,
-    vol.Optional(ATTR_PIN,               default=""): cv.string,
-    vol.Optional(ATTR_SWITCH_CODES,      default=[]): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(ATTR_CALL_PEER,         default=""): cv.string,
-    vol.Optional(ATTR_TREEPATH,          default="/"): cv.string,
-    vol.Optional(ATTR_VALID_FROM,        default=0): vol.Coerce(int),
-    vol.Optional(ATTR_VALID_TO,          default=0): vol.Coerce(int),
+    vol.Optional(ATTR_USER_EMAIL):       cv.string,
+    vol.Optional(ATTR_USER_VIRT_NUMBER): cv.string,
+    vol.Optional(ATTR_PIN):              cv.string,
+    vol.Optional(ATTR_SWITCH_CODES):     vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(ATTR_CALL_PEER):        cv.string,
+    vol.Optional(ATTR_TREEPATH):         cv.string,
+    vol.Optional(ATTR_VALID_FROM):       vol.Coerce(int),
+    vol.Optional(ATTR_VALID_TO):         vol.Coerce(int),
 })
 
 UPDATE_USER_SCHEMA = vol.Schema({
@@ -143,17 +143,22 @@ def _get_coordinator(hass: HomeAssistant, entry_id: str | None):
 
 def _build_user_payload(data: dict[str, Any]) -> dict[str, Any]:
     payload: dict[str, Any] = {}
-    if name    := data.get(ATTR_USER_NAME):     payload["name"]       = name
-    if email   := data.get(ATTR_USER_EMAIL):    payload["email"]      = email
-    if virt    := data.get(ATTR_USER_VIRT_NUMBER): payload["virtNumber"] = virt
-    if tree    := data.get(ATTR_TREEPATH):      payload["treepath"]   = tree
+    if name  := data.get(ATTR_USER_NAME):        payload["name"]       = name
+    if email := data.get(ATTR_USER_EMAIL):        payload["email"]      = email
+    if virt  := data.get(ATTR_USER_VIRT_NUMBER):  payload["virtNumber"] = virt
+    if tree  := data.get(ATTR_TREEPATH):          payload["treepath"]   = tree
 
     access: dict[str, Any] = {}
-    if (pin := data.get(ATTR_PIN)) is not None:           access["pin"]  = pin
+    # Only send pin/codes/timestamps when they carry a real value — the device
+    # rejects empty strings and zero timestamps with API error 3.
+    if pin := data.get(ATTR_PIN):
+        access["pin"] = pin
     if codes := data.get(ATTR_SWITCH_CODES):
         access["code"] = (list(codes) + ["", "", "", ""])[:4]
-    if (vf := data.get(ATTR_VALID_FROM)) is not None:     access["validFrom"] = str(vf)
-    if (vt := data.get(ATTR_VALID_TO))   is not None:     access["validTo"]   = str(vt)
+    if vf := data.get(ATTR_VALID_FROM):
+        access["validFrom"] = str(vf)
+    if vt := data.get(ATTR_VALID_TO):
+        access["validTo"] = str(vt)
     if access:
         payload["access"] = access
 
